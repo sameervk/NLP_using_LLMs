@@ -1,0 +1,6 @@
+[virtualenvs]
+create = true
+options.system-site-packages = false
+in-project = true
+
+
