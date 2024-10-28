@@ -5,6 +5,7 @@ import time
 
 import numpy as np
 import pandas as pd
+import scipy.sparse._csr
 from packaging import version
 from torch.utils.data import Dataset
 import torch
@@ -91,16 +92,13 @@ def partition_dataset(df: pd.DataFrame, basepath: Path):
 # Creating a torch Dataset
 class IMDBDataset(Dataset):
 
-    def __init__(self, file_path: Path):
-
-        df = pd.read_csv(file_path)
-        # import data into a dataframe
+    def __init__(self, features: np.array, labels: np.array):
 
         # self.X = torch.tensor(df['text'].values)
         # This can only be done on numeric values
 
-        self.X = df['text'].values
-        self.y = torch.tensor(df['label'].values)
+        self.X = torch.tensor(features, dtype=torch.float32)
+        self.y = torch.tensor(labels, dtype=torch.uint64)
         # convert to tensor format
 
     def __getitem__(self, idx):
