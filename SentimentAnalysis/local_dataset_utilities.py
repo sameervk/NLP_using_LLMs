@@ -98,8 +98,10 @@ class IMDBDataset(Dataset):
         # This can only be done on numeric values
 
         self.X = torch.tensor(features, dtype=torch.float32)
-        self.y = torch.tensor(labels, dtype=torch.uint64)
+
+        self.y = torch.tensor(labels, dtype=torch.int64)
         # convert to tensor format
+        # dtype cannot be of unsigned type
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
