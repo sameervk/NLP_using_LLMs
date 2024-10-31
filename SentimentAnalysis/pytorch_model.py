@@ -3,6 +3,7 @@ from typing import Any
 import torch
 import lightning as L
 import torchmetrics
+from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 
 
 class PytorchLogReg(torch.nn.Module):
@@ -51,6 +52,41 @@ class LightningModel(L.LightningModule):
         # dim= 1 is along the columns, in this case the num of classes
 
         return loss, true_labels, predicted_labels
+
+    def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
+        loss, true_labels, predicted_labels = self._shared_step(batch)
+
+        self.log("train_loss", loss)
+        self.train_acc(predicted_labels, true_labels)
+        self.log("train_acc", self.train_acc, prog_bar=True, on_step=False, on_epoch=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> STEP_OUTPUT:
+        loss, true_labels, predicted_labels = self._shared_step(batch)
+
+        self.log("val_loss", loss, prog_bar=True)
+        self.val_acc(predicted_labels, true_labels)
+        self.log("val_acc", self.val_acc, prog_bar=True)
+        # on_step=False, on_epoch=True
+        # using these parameters is resulting in progress bar for every batch item in the validation dataq
+
+        return loss
+
+    def test_step(self, batch, batch_idx) -> STEP_OUTPUT:
+        loss, true_labels, predicted_labels = self._shared_step(batch)
+
+        self.log("test_loss", loss, prog_bar=True)
+        self.test_acc(predicted_labels, true_labels)
+        self.log("test_acc", self.test_acc, prog_bar=True, on_step=False, on_epoch=True)
+
+        return loss
+
+    def configure_optimizers(self) -> OptimizerLRScheduler:
+
+        optimiser = torch.optim.SGD(self.parameters(), lr=self.learning_rate)
+
+        return optimiser
 
 
 
