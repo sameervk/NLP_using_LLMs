@@ -108,5 +108,5 @@ class IMDBDataset(Dataset):
 
     def __len__(self):
 
-        return len(self.y)
+        return self.y.shape[0]
 

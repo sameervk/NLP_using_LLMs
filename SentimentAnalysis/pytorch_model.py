@@ -1,8 +1,10 @@
+import sys
 from typing import Any
 
 import torch
 import lightning as L
 import torchmetrics
+from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 
 
@@ -69,7 +71,8 @@ class LightningModel(L.LightningModule):
         self.val_acc(predicted_labels, true_labels)
         self.log("val_acc", self.val_acc, prog_bar=True)
         # on_step=False, on_epoch=True
-        # using these parameters is resulting in progress bar for every batch item in the validation dataq
+        # using these parameters is resulting in progress bar for every batch item in the validation data
+        # and an error message: IOPub message rate exceeded.
 
         return loss
 
@@ -78,7 +81,7 @@ class LightningModel(L.LightningModule):
 
         self.log("test_loss", loss, prog_bar=True)
         self.test_acc(predicted_labels, true_labels)
-        self.log("test_acc", self.test_acc, prog_bar=True, on_step=False, on_epoch=True)
+        self.log("test_acc", self.test_acc, prog_bar=True)
 
         return loss
 
@@ -89,6 +92,22 @@ class LightningModel(L.LightningModule):
         return optimiser
 
 
+class MyProgressBar(TQDMProgressBar):
+    def init_validation_tqdm(self):
+        bar = super().init_validation_tqdm()
+        if not sys.stdout.isatty():
+            bar.disable = True
+        return bar
 
+    def init_predict_tqdm(self):
+        bar = super().init_predict_tqdm()
+        if not sys.stdout.isatty():
+            bar.disable = True
+        return bar
 
+    def init_test_tqdm(self):
+        bar = super().init_test_tqdm()
+        if not sys.stdout.isatty():
+            bar.disable = True
+        return bar
 
