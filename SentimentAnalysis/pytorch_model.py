@@ -6,7 +6,7 @@ import lightning as L
 import torchmetrics
 from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
-
+from transformers.models.distilbert.modeling_distilbert import DistilBertForSequenceClassification
 
 class PytorchLogReg(torch.nn.Module):
 
@@ -110,4 +110,25 @@ class MyProgressBar(TQDMProgressBar):
         if not sys.stdout.isatty():
             bar.disable = True
         return bar
+
+
+class LightningModelDistilBERT(torch.nn.Module):
+
+    def __init__(self, model: DistilBertForSequenceClassification, learning_rate=5e-5):
+        super().__init__()
+        self.model = model
+        self.learning_rate = learning_rate
+
+        self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=2)
+        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=2)
+
+    def forward(self, input_ids, attention_mask, labels):
+        return self.model(input_ids, attention_mask=attention_mask, labels=labels)
+
+    def training_step(self, batch, batch_idx):
+
+        outputs = self(batch["input_ids"], attention_mask=batch["attention_mask"],
+                       labels=batch["label"]
+                       )
+        self.log("train_loss", outputs["loss"])
 
