@@ -5,9 +5,9 @@ import time
 
 import numpy as np
 import pandas as pd
-import scipy.sparse._csr
 from packaging import version
 from torch.utils.data import Dataset
+from datasets import DatasetDict
 import torch
 from tqdm import tqdm
 import urllib
@@ -110,3 +110,18 @@ class IMDBDataset(Dataset):
 
         return self.y.shape[0]
 
+
+class PytorchDatasetDistilBERT(Dataset):
+
+    def __init__(self, huggingface_dataset_dict: DatasetDict, partition: str):
+
+        super().__init__()
+        self.partition = huggingface_dataset_dict[partition]
+
+    def __getitem__(self, idx):
+
+        return self.partition[idx]
+
+    def __len__(self):
+
+        return self.partition.num_rows

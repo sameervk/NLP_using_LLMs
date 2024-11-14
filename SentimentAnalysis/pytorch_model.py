@@ -1,6 +1,7 @@
 import sys
 from typing import Any
 
+import lightning
 import torch
 import lightning as L
 import torchmetrics
@@ -112,7 +113,7 @@ class MyProgressBar(TQDMProgressBar):
         return bar
 
 
-class LightningModelDistilBERT(torch.nn.Module):
+class LightningModelDistilBERT(lightning.LightningModule):
 
     def __init__(self, model: DistilBertForSequenceClassification, learning_rate=5e-5):
         super().__init__()
@@ -123,12 +124,52 @@ class LightningModelDistilBERT(torch.nn.Module):
         self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=2)
 
     def forward(self, input_ids, attention_mask, labels):
-        return self.model(input_ids, attention_mask=attention_mask, labels=labels)
+        output = self.model(input_ids, attention_mask=attention_mask, labels=labels)
+        return output
 
     def training_step(self, batch, batch_idx):
 
         outputs = self(batch["input_ids"], attention_mask=batch["attention_mask"],
                        labels=batch["label"]
                        )
-        self.log("train_loss", outputs["loss"])
 
+        self.log("train_loss", outputs["loss"])
+        # unlike in the above LightningModel where loss had to be calculated, here the calculation of loss is implicit.
+
+        return outputs["loss"]
+
+    def validation_step(self, batch, batch_idx):
+
+        outputs = self(batch["input_ids"], attention_mask=batch["attention_mask"],
+                       labels=batch["label"]
+                       )
+
+        logits = outputs["logits"]
+        # before softmax is applied
+
+        predicted_labels = torch.argmax(logits, dim=1)
+        self.val_acc(predicted_labels, batch["label"])
+
+        self.log("val_acc", self.val_acc, prog_bar=True)
+        self.log("val_loss", outputs["loss"], prog_bar=True)
+
+    def test_step(self, batch, batch_idx):
+
+        outputs = self(batch["input_ids"], attention_mask=batch["attention_mask"],
+                       labels=batch["label"]
+                       )
+
+        logits = outputs["logits"]
+        # before softmax is applied
+
+        predicted_labels = torch.argmax(logits, dim=1)
+        self.test_acc(predicted_labels, batch["label"])
+
+        self.log("test_acc", self.test_acc, prog_bar=True)
+        self.log("test_loss", outputs["loss"], prog_bar=True)
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(params=self.parameters(),
+                                     lr=self.learning_rate
+                                     )
+        return optimizer
