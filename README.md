@@ -25,5 +25,5 @@ David Lutz, eds., Proceedings of Semantics and Linguistic Theory 20,
      * Took **49 hours for 1 epoch** for training and validation
      * test accuracy = 82.0% for 1 epoch
      * NOTE: parallel data loading was not working even with `strategy="ddp_notebook"` when executing from notebook. 
-       \nSuggestion is to explore and develop testing code in jupyter notebook but train the model using script file.
+       Suggestion is to explore and develop testing code in jupyter notebook but train the model using script file.
    
