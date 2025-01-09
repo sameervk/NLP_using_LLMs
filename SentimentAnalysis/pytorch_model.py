@@ -1,13 +1,12 @@
 import sys
 from typing import Any
-
-import lightning
 import torch
 import lightning as L
 import torchmetrics
 from lightning.pytorch.callbacks import TQDMProgressBar
 from lightning.pytorch.utilities.types import STEP_OUTPUT, OptimizerLRScheduler
 from transformers.models.distilbert.modeling_distilbert import DistilBertForSequenceClassification
+
 
 class PytorchLogReg(torch.nn.Module):
 
@@ -113,7 +112,7 @@ class MyProgressBar(TQDMProgressBar):
         return bar
 
 
-class LightningModelDistilBERT(lightning.LightningModule):
+class LightningModelDistilBERT(L.LightningModule):
 
     def __init__(self, model: DistilBertForSequenceClassification, learning_rate=5e-5):
         super().__init__()
